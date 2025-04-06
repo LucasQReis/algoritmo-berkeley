@@ -27,6 +27,12 @@ public class BerkeleyCliente extends UnicastRemoteObject implements BerkeleyInte
     }
 
     @Override
+    public void setAjustarRelogio(long diferenca) {
+        horarioLocal = new Date(horarioLocal.getTime() + diferenca);
+        System.out.println(nome + " horário ajustado: " + horarioLocal);
+    }
+
+    @Override
     public String getNome() throws RemoteException {
         return nome;
     }

@@ -27,6 +27,18 @@ public class BerkeleyServer extends UnicastRemoteObject {
                 }
             }
 
+            long soma = 0;
+            for (long dif : clientes.values()) {
+                soma += dif;
+            }
+            long media = soma / (clientes.size() + 1);
+            System.out.println("Média da diferença: " + media + " ms");
+
+            for (Map.Entry<BerkeleyInterface, Long> entry : clientes.entrySet()) {
+                long ajuste = media - entry.getValue();
+                entry.getKey().setAjustarRelogio(ajuste);
+                System.out.println(entry.getKey().getNome() + " ajustado em " + ajuste + " ms");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
