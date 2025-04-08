@@ -11,24 +11,22 @@ public class BerkeleyCliente extends UnicastRemoteObject implements BerkeleyInte
     private final String nome;
 
     public static void main(String[] args) throws Exception {
-        try {
-            BerkeleyCliente cliente = new BerkeleyCliente();
-            Naming.rebind(cliente.nome, cliente);
-        } catch (RemoteException e) {
-            throw new IllegalArgumentException("Informe o nome do cliente: " + e.getMessage());
-        }
-    }
-
-    protected BerkeleyCliente() throws RemoteException {
-        Scanner scanner = new Scanner(System.in);
-    
-        System.out.println("Digite o nome do cliente: ");
-        this.nome = scanner.nextLine();
-    
-        if (nome.isEmpty()) {
-            System.out.println("Nome do cliente não pode estar vazio.");
+        if (args.length < 2) {
+            System.out.println("Argumentos necessarios: Cliente e IP");
             System.exit(1);
         }
+
+        String nomeCliente = args[0];
+        String ip = args[1];
+
+        BerkeleyCliente cliente = new BerkeleyCliente(nomeCliente);
+        Naming.rebind("rmi://" + ip + "/" + nomeCliente, cliente);
+    }
+
+    protected BerkeleyCliente(String nomeCliente) throws RemoteException {
+        this.nome = nomeCliente;
+
+        Scanner scanner = new Scanner(System.in);
         System.out.println("Digite o horário local no formato HH:mm:ss");
         String horarioInput = scanner.nextLine();
     
@@ -52,8 +50,6 @@ public class BerkeleyCliente extends UnicastRemoteObject implements BerkeleyInte
     
         System.out.println(nome + " iniciado com horário: " + horarioLocal);
     }
-    
-    
 
     @Override
     public long setDiferencaTempo(long horarioServidor) throws RemoteException {
