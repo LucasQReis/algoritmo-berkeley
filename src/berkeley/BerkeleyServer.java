@@ -81,17 +81,17 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
         return media;
     }
 
-    public static void iniciaRmi(BerkeleyServer coordinator) throws UnknownHostException, RemoteException {
+    public static void iniciaRmi(BerkeleyServer coordinator, int portaServidor)
+            throws UnknownHostException, RemoteException {
         String ip = InetAddress.getLocalHost().getHostAddress();
         System.setProperty("java.rmi.server.hostname", ip);
-        int portaServidor = 9070;
         Registry registry = LocateRegistry.createRegistry(portaServidor);
         registry.rebind("ClockService", coordinator);
 
-        System.out.println("Servidor (Coordenador) pronto e aguardando registros..." + ip);
+        System.out.println("Servidor (" + ip + ") pronto e aguardando registros...");
     }
 
-    public static void leComando(String comando) throws RemoteException, NotBoundException{
+    public static void leComando(String comando) throws RemoteException, NotBoundException {
         switch (comando) {
             case "sync":
                 Sincroniza(coordinator);
@@ -101,15 +101,18 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
                 break;
             case "list":
                 listaClientes();
-            break;
+                break;
+            case "help":
+                printaComandosDisponiveis();
+                break;
             default:
                 System.out.println("Comando " + comando + " não reconhecido");
                 break;
         }
     }
 
-    public static void listaClientes(){
-        if(coordinator.clientes.isEmpty()){
+    public static void listaClientes() {
+        if (coordinator.clientes.isEmpty()) {
             System.out.println("Nenhum cliente registrado ainda.");
             return;
         }
@@ -119,13 +122,14 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
         }
     }
 
-    public static void printaComandosDisponiveis(){
+    public static void printaComandosDisponiveis() {
         System.out.println("+------------------------------------ +");
         System.out.println("|  Insira um dos comando disponíveis: |");
         System.out.println("+------------------------------------ +");
         System.out.println("| - sync                              |");
-        System.out.println("| - exit                              |");
         System.out.println("| - list                              |");
+        System.out.println("| - help                              |");
+        System.out.println("| - exit                              |");
         System.out.println("+------------------------------------ +");
     }
 
@@ -133,8 +137,8 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
         try {
             coordinator = new BerkeleyServer();
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-            iniciaRmi(coordinator);
+            int portaServidor = Integer.parseInt(args[0]);
+            iniciaRmi(coordinator, portaServidor);
             printaComandosDisponiveis();
 
             while (true) {

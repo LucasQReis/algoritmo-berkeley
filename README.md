@@ -10,7 +10,7 @@
 `start cmd /k "cd . && start rmiregistry"`
 
 2 - Subir o Servidor:
-`java berkeley.BerkeleyServer 127.0.0.1`
+`java berkeley.BerkeleyServer --porta`
 
 3 - Subir o Cliente:
-`java berkeley.BerkeleyCliente Cliente1 127.0.0.1`
+`java berkeley.BerkeleyClient --ip --porta`
