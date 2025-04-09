@@ -1,7 +1,6 @@
 package berkeley;
 
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Date;
@@ -12,7 +11,8 @@ public class BerkeleyServer extends UnicastRemoteObject {
     private final Map<BerkeleyInterface, Long> clientes = new HashMap<>();
     private final Date horaServidor = new Date();
 
-    public BerkeleyServer() throws RemoteException {}
+    public BerkeleyServer() throws RemoteException {
+    }
 
     public void sincronizar(String ip) throws RemoteException {
         System.out.println("Servidor iniciou: " + horaServidor);
@@ -45,11 +45,15 @@ public class BerkeleyServer extends UnicastRemoteObject {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    private static void VerificaArgumentos(String[] args) {
         if (args.length < 1) {
             System.out.println("Argumento necessario: IP");
             System.exit(1);
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        VerificaArgumentos(args);
 
         String ip = args[0];
         BerkeleyServer servidor = new BerkeleyServer();
