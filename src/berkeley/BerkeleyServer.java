@@ -13,9 +13,8 @@ import java.util.*;
 
 public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInterface {
     private long localClock;
-    private List<String> clientHosts = new ArrayList<>();
+    private List<ClienteInfo> clientes = new ArrayList<>();
     private static BerkeleyServer coordinator;
-    private static int portaCliente = 9060;
 
     protected BerkeleyServer() throws RemoteException {
         super();
@@ -31,15 +30,15 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
         System.out.println("Clock ajustado em " + offset + " ms. Novo tempo: " + new Date(localClock));
     }
 
-    public void registerClient(String clientHost) throws RemoteException {
-        if (!clientHosts.contains(clientHost)) {
-            clientHosts.add(clientHost);
-            System.out.println("Cliente registrado: " + clientHost);
+    public void registerClient(ClienteInfo clienteInfo) throws RemoteException {
+        if (!clientes.contains(clienteInfo)) {
+            clientes.add(clienteInfo);
+            System.out.println("Cliente registrado: " + clienteInfo);
         }
     }
 
-    public static void Sincroniza(BerkeleyServer coordinator, int porta) throws RemoteException, NotBoundException {
-        if (coordinator.clientHosts.isEmpty()) {
+    public static void Sincroniza(BerkeleyServer coordinator) throws RemoteException, NotBoundException {
+        if (coordinator.clientes.isEmpty()) {
             System.out.println("Nenhum cliente registrado ainda.");
             return;
         }
@@ -48,12 +47,12 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
         System.out.println("Tempo do servidor " + new Date(coordinator.getClockTime()));
         tempos.add(coordinator.getClockTime());
 
-        for (String ip : coordinator.clientHosts) {
-            Registry clientReg = LocateRegistry.getRegistry(ip, porta);
+        for (ClienteInfo cliente : coordinator.clientes) {
+            Registry clientReg = LocateRegistry.getRegistry(cliente.ip, cliente.porta);
             BerkeleyInterface stub = (BerkeleyInterface) clientReg.lookup("ClockService");
             long clientTime = stub.getClockTime();
             tempos.add(clientTime);
-            System.out.println("Tempo do cliente " + ip + ": " + new Date(clientTime));
+            System.out.println("Tempo do cliente " + cliente + ": " + new Date(clientTime));
         }
 
         long media = calculaMedia(tempos);
@@ -62,8 +61,8 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
         coordinator.adjustClock(offsetCoordenador);
 
         int i = 1;
-        for (String ip : coordinator.clientHosts) {
-            Registry clientReg = LocateRegistry.getRegistry(ip, porta);
+        for (ClienteInfo cliente : coordinator.clientes) {
+            Registry clientReg = LocateRegistry.getRegistry(cliente.ip, cliente.porta);
             BerkeleyInterface stub = (BerkeleyInterface) clientReg.lookup("ClockService");
 
             long offset = media - tempos.get(i);
@@ -95,7 +94,7 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
     public static void leComando(String comando) throws RemoteException, NotBoundException{
         switch (comando) {
             case "sync":
-                Sincroniza(coordinator, portaCliente);
+                Sincroniza(coordinator);
                 break;
             case "exit":
                 System.exit(1);
@@ -110,13 +109,13 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
     }
 
     public static void listaClientes(){
-        if(coordinator.clientHosts.isEmpty()){
+        if(coordinator.clientes.isEmpty()){
             System.out.println("Nenhum cliente registrado ainda.");
             return;
         }
 
-        for (String ip : coordinator.clientHosts) {
-            System.out.println("Cliente : " + ip);
+        for (ClienteInfo cliente : coordinator.clientes) {
+            System.out.println("Cliente : " + cliente);
         }
     }
 

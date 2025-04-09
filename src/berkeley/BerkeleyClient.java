@@ -4,6 +4,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.util.Date;
 
 public class BerkeleyClient extends UnicastRemoteObject implements BerkeleyInterface {
@@ -25,16 +26,26 @@ public class BerkeleyClient extends UnicastRemoteObject implements BerkeleyInter
         System.out.println("Clock ajustado em " + offset + " ms. Novo tempo: " + new Date(localClock));
     }
 
-    public void registerClient(String clientHost) throws java.rmi.RemoteException {
+    public void registerClient(ClienteInfo clientInfo) throws java.rmi.RemoteException {
         // não usado no cliente
     }
+
+    public static int getPortaLivre() {
+    try (ServerSocket socket = new ServerSocket(0)) {
+        return socket.getLocalPort();
+    } catch (Exception e) {
+        throw new RuntimeException("Não foi possível obter uma porta livre.", e);
+    }
+}
 
     public static void main(String[] args) {
         try {
             BerkeleyClient client = new BerkeleyClient();
-            int portaServidor = 9070;
-            int portaCliente = 9060;
+
             String ipServidor = args[0];
+            int portaServidor = Integer.parseInt(args[1]);
+            int portaCliente = getPortaLivre();
+
             Registry registry = LocateRegistry.createRegistry(portaCliente);
             registry.rebind("ClockService", client);
 
@@ -43,8 +54,7 @@ public class BerkeleyClient extends UnicastRemoteObject implements BerkeleyInter
             BerkeleyInterface stub = (BerkeleyInterface) serverRegistry.lookup("ClockService");
 
             String myIp = InetAddress.getLocalHost().getHostAddress();
-            stub.registerClient(myIp);
-
+            stub.registerClient(new ClienteInfo(myIp, portaCliente));
         } catch (Exception e) {
             e.printStackTrace();
         }
