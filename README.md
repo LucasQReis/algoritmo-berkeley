@@ -1,6 +1,13 @@
 
 # Berkeley
 
+# Equipe
+
+lucas queiroz
+maria júlia testoni
+micael luan conti
+selmo werner
+
 ## Compilar
 `javac -d . src\berkeley\*.java`
 
