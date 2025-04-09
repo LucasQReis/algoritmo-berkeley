@@ -78,14 +78,15 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
 
     public static void main(String[] args) {
         try {
+            String ip =InetAddress.getLocalHost().getHostAddress();
+            System.setProperty("java.rmi.server.hostname", ip);
             int portaServidor = 9070;
             int portaCliente = 9060;
             BerkeleyServer coordinator = new BerkeleyServer();
             Registry registry = LocateRegistry.createRegistry(portaServidor);
             registry.rebind("ClockService", coordinator);
-            String localIp = InetAddress.getLocalHost().getHostAddress();
-            System.out.println("IP do servidor: " + localIp);
-            System.out.println("Servidor (Coordenador) pronto e aguardando registros...");
+
+            System.out.println("Servidor (Coordenador) pronto e aguardando registros..." + ip);
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
