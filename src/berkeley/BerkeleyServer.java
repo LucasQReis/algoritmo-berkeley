@@ -55,14 +55,32 @@ public class BerkeleyServer extends UnicastRemoteObject {
         BerkeleyServer servidor = new BerkeleyServer();
 
         try {
+            Naming.lookup("rmi://" + ip + "/Servidor");
+            System.out.println("Objeto com o nome 'Servidor' já exite");
+            System.exit(1);
+        } catch (NotBoundException e) {
             Naming.rebind("rmi://" + ip + "/Servidor", servidor);
+
             System.out.println("Servidor registrado no RMI.");
+            System.out.println("Aguardando clientes, pressione ENTER para tentar sincronizar.");
+            System.in.read();
 
-            System.out.println("Aguardando clientes... Pressione ENTER para sincronizar.");
-            System.in.read(); // Espera o usuário pressionar Enter
+            String[] nomes = Naming.list("rmi://" + ip + "/");
+            int totalClientes = 0;
+            for (String nome : nomes) {
+                if (!nome.contains("Servidor")) {
+                    totalClientes++;
+                }
+            }
 
-            servidor.sincronizar(ip); // Sincronização manual após todos os clientes conectarem
+            if (totalClientes < 2) {
+                System.out.println("Necessário registrar ao menos 2 clientes antes de sincronizar.");
+                Naming.unbind("rmi://" + ip + "/Servidor");
+                System.exit(1);
+            }
 
+            servidor.sincronizar(ip);
+            Naming.unbind("rmi://" + ip + "/Servidor");
         } catch (Exception e) {
             e.printStackTrace();
         }
