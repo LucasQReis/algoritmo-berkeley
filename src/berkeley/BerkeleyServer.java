@@ -12,9 +12,10 @@ import java.rmi.registry.Registry;
 import java.util.*;
 
 public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInterface {
-
     private long localClock;
     private List<String> clientHosts = new ArrayList<>();
+    private static BerkeleyServer coordinator;
+    private static int portaCliente = 9060;
 
     protected BerkeleyServer() throws RemoteException {
         super();
@@ -43,7 +44,6 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
             return;
         }
 
-        // Sincroniza os relógios após o tempo de registro
         List<Long> tempos = new ArrayList<>();
         System.out.println("Tempo do servidor " + new Date(coordinator.getClockTime()));
         tempos.add(coordinator.getClockTime());
@@ -92,22 +92,40 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
         System.out.println("Servidor (Coordenador) pronto e aguardando registros..." + ip);
     }
 
+    public static void leComando(String comando) throws RemoteException, NotBoundException{
+        switch (comando) {
+            case "sync":
+                Sincroniza(coordinator, portaCliente);
+                break;
+            case "exit":
+                System.exit(1);
+            default:
+                System.out.println("Comando " + comando + " não reconhecido");
+                break;
+        }
+    }
+
+    public static void printaComandosDisponiveis(){
+        System.out.println("+------------------------------------ +");
+        System.out.println("|  Insira um dos comando disponíveis: |");
+        System.out.println("+------------------------------------ +");
+        System.out.println("| - sync                              |");
+        System.out.println("| - exit                              |");
+        System.out.println("+------------------------------------ +");
+    }
+
     public static void main(String[] args) {
         try {
-            BerkeleyServer coordinator = new BerkeleyServer();
-
-            iniciaRmi(coordinator);
-            
-            int portaCliente = 9060;
-
+            coordinator = new BerkeleyServer();
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-            while (true) {
-                System.out.println("\nPressione ENTER para iniciar a sincronização...");
-                reader.readLine();
-                Sincroniza(coordinator, portaCliente);
-            }
+            iniciaRmi(coordinator);
+            printaComandosDisponiveis();
 
+            while (true) {
+                String comando = reader.readLine();
+                leComando(comando);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
