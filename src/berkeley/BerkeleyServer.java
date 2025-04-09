@@ -99,9 +99,24 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
                 break;
             case "exit":
                 System.exit(1);
+                break;
+            case "list":
+                listaClientes();
+            break;
             default:
                 System.out.println("Comando " + comando + " não reconhecido");
                 break;
+        }
+    }
+
+    public static void listaClientes(){
+        if(coordinator.clientHosts.isEmpty()){
+            System.out.println("Nenhum cliente registrado ainda.");
+            return;
+        }
+
+        for (String ip : coordinator.clientHosts) {
+            System.out.println("Cliente : " + ip);
         }
     }
 
@@ -111,6 +126,7 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
         System.out.println("+------------------------------------ +");
         System.out.println("| - sync                              |");
         System.out.println("| - exit                              |");
+        System.out.println("| - list                              |");
         System.out.println("+------------------------------------ +");
     }
 
