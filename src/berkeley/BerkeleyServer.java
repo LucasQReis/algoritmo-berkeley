@@ -3,6 +3,7 @@ package berkeley;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -55,10 +56,7 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
             System.out.println("Tempo do cliente " + ip + ": " + new Date(clientTime));
         }
 
-        long soma = 0;
-        for (long t : tempos)
-            soma += t;
-        long media = soma / tempos.size();
+        long media = calculaMedia(tempos);
 
         long offsetCoordenador = media - coordinator.getClockTime();
         coordinator.adjustClock(offsetCoordenador);
@@ -76,24 +74,38 @@ public class BerkeleyServer extends UnicastRemoteObject implements BerkeleyInter
         System.out.println("Sincronização finalizada.");
     }
 
+    public static long calculaMedia(List<Long> tempos) {
+        long soma = 0;
+        for (long t : tempos)
+            soma += t;
+        long media = soma / tempos.size();
+        return media;
+    }
+
+    public static void iniciaRmi(BerkeleyServer coordinator) throws UnknownHostException, RemoteException {
+        String ip = InetAddress.getLocalHost().getHostAddress();
+        System.setProperty("java.rmi.server.hostname", ip);
+        int portaServidor = 9070;
+        Registry registry = LocateRegistry.createRegistry(portaServidor);
+        registry.rebind("ClockService", coordinator);
+
+        System.out.println("Servidor (Coordenador) pronto e aguardando registros..." + ip);
+    }
+
     public static void main(String[] args) {
         try {
-            String ip =InetAddress.getLocalHost().getHostAddress();
-            System.setProperty("java.rmi.server.hostname", ip);
-            int portaServidor = 9070;
-            int portaCliente = 9060;
             BerkeleyServer coordinator = new BerkeleyServer();
-            Registry registry = LocateRegistry.createRegistry(portaServidor);
-            registry.rebind("ClockService", coordinator);
 
-            System.out.println("Servidor (Coordenador) pronto e aguardando registros..." + ip);
+            iniciaRmi(coordinator);
+            
+            int portaCliente = 9060;
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-            while(true){
+            while (true) {
                 System.out.println("\nPressione ENTER para iniciar a sincronização...");
                 reader.readLine();
-                Sincroniza(coordinator,portaCliente);
+                Sincroniza(coordinator, portaCliente);
             }
 
         } catch (Exception e) {
